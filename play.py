@@ -6,10 +6,25 @@ stdscr = curses.initscr()
 class Game:
 	def __init__(self, stdscr):
 		self.stdscr = stdscr
-		self.gameWin = curses.newwin(9, 9)
+		self.gameWin = curses.newwin(5, 5)
 		self.helpWin = None
 		self.y, self.x = self.gameWin.getyx()
 		self.errMsg = { 1 : 'Cant go here, You FOOL!' }
+
+	def drawGameWin(self):
+		self.gameWin.addstr(0, 1, '|')
+		self.gameWin.addstr(0, 3, '|')
+		self.gameWin.addstr(2, 1, '|')
+		self.gameWin.addstr(2, 3, '|')
+		self.gameWin.addstr(4, 1, '|')
+		self.gameWin.addstr(4, 3, '|')
+		self.gameWin.addstr(1, 0, '–+–+–')
+		self.gameWin.addstr(3, 0, '–+–+–')
+		# try:
+		# 	self.gameWin.addstr(4, 0, ' | | ')
+		# except Exception:
+		# 	pass
+		self.gameWin.move(self.y, self.x)
 
 	def makeHelpWin(self, errCode):
 
@@ -34,21 +49,26 @@ class Game:
 
 
 	def readInput(self):
-		# self.gameWin.addstr('read')
-		# self.gameWin.refresh()
+
 		c = self.gameWin.getch()
 		if c == 65:
-			self.y -= 1
+			self.y -= 2
 		elif c == 66:
-			self.y += 1
+			self.y += 2
 		elif c == 68:
-			self.x -= 1 
+			self.x -= 2 
 		elif c == 67:
-			self.x += 1
+			self.x += 2
 		elif c == ord('X') or c == ord('x'): 
-			self.gameWin.addstr('X')
+			try:
+				self.gameWin.addstr('X')
+			except Exception:
+				pass
 		elif c == ord('O') or c == ord('o'):
-			self.gameWin.addstr('O')
+			try:
+				self.gameWin.addstr('O')
+			except Exception:
+				pass
 		elif c == ord('r'):
 			self.reset()
 		elif c == ord('q'):
@@ -72,8 +92,10 @@ def main(stdscr):
 	g = Game(stdscr)
 	curses.use_default_colors()
 	stdscr.clear()
+	
 	while True:
 
+		g.drawGameWin()
 		g.readInput()
 		g.makeMove()
 
