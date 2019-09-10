@@ -2,155 +2,88 @@ import curses
 from curses import wrapper
 stdscr = curses.initscr()
 
-class Window:
-	def __init__(self):
-		self.cwin = None
-		self.height = None
-		self.length = None
-		self.y = None
-		self.x = None
 
-	def setWindow(self):
-		self.cwin = curses.newwin(self.height, self.length, self.y, self.x)
-		return
+class Game:
+	def __init__(self, stdscr):
+		self.stdscr = stdscr
+		self.gameWin = curses.newwin(9, 9)
+		self.helpWin = None
+		self.y, self.x = self.gameWin.getyx()
+		self.errMsg = { 1 : 'Cant go here, You FOOL!' }
 
+	def makeHelpWin(self, errCode):
 
-class PlayWindow(Window):
-	def __init__(self):
+		msg = self.errMsg[errCode]
+		if msg:
+			self.helpWin = curses.newwin(3, len(msg) + 4, 30, 10 )
+			self.helpWin.box()
+			self.helpWin.addstr(1, 2, msg)
+			self.helpWin.refresh()
 
-		self.height = 10
-		self.length = 10
-		self.y = 10
-		self.x = 10
-		self.setWindow()
+	def makeMove(self):
 
-class HelpWindow(Window):
-	def __init__(self):
-		self.cwin = None
-		self.msg = None
-		self.height = 3
-		self.length = None
-		self.y = 30
-		self.x = 10
 		try:
-			self.setMessage(self.msg)
-		except AttributeError:
+			self.gameWin.move(self.y, self.x)
+			if self.helpWin:
+				self.helpWin.erase()
+				self.helpWin.refresh()
+
+		except Exception:
+			self.makeHelpWin(1)
+			self.y, self.x = self.gameWin.getyx()
+
+
+	def readInput(self):
+		# self.gameWin.addstr('read')
+		# self.gameWin.refresh()
+		c = self.gameWin.getch()
+		if c == 65:
+			self.y -= 1
+		elif c == 66:
+			self.y += 1
+		elif c == 68:
+			self.x -= 1 
+		elif c == 67:
+			self.x += 1
+		elif c == ord('X') or c == ord('x'): 
+			self.gameWin.addstr('X')
+		elif c == ord('O') or c == ord('o'):
+			self.gameWin.addstr('O')
+		elif c == ord('r'):
+			self.reset()
+		elif c == ord('q'):
+			self.quit()
+		else:
 			pass
-	
+			# self.gameWin.addstr(str(c))
+			# # self.gameWin.addstr(str(d))
+			# self.gameWin.refresh()
 
-	def setMessage(self, msg):
-		if msg and type(msg) == str:
-			self.msg = msg
-			self.length = len(msg) + 4
-			self.setWindow()
-			self.cwin.box()
-			self.cwin.addstr(1, 2, self.msg)
-			self.cwin.refresh()
-			return 
+	def quit(self):
+		exit()
 
-	def clean(self):
-		self.cwin = None
-		return
+	def reset(self):
+		self.gameWin.erase()
+		self.y, self.x = self.gameWin.getyx()
 
 
 
+def main(stdscr):
+	g = Game(stdscr)
+	curses.use_default_colors()
+	stdscr.clear()
+	while True:
+
+		g.readInput()
+		g.makeMove()
+
+		stdscr.refresh()
+
+		
+
+wrapper(main)
 
 
-class Action:
-	def __init__(self, hwin):
-
-		self.hwin = hwin
-
-	def readInput(self, win, c):
-
-			y, x = win.getyx()
-			if c == curses.KEY_UP:
-				y -= 1
-			if c == curses.KEY_DOWN:
-				y += 1 
-			elif c == curses.KEY_LEFT:
-				x -= 1 
-			elif c == curses.KEY_RIGHT:
-				x += 1
-			elif c == ord('X') or c == ord('x'): 
-				return (win, 'x')
-			elif c == ord('O') or c == ord('o'):
-				return (win, 'o')
-			elif c == ord('r'):
-				return (win, 'r')
-			elif c == ord('q'):
-				return (win, 'q')
-			return (win, (y, x))
-
-	def doAction(self, inp):
-
-		if type(inp) == tuple:
-			self.win = inp[0]
-			self.yCur, self.xCur = self.win.getyx()
-			if type(inp[1]) == tuple:
-				return self.returnMove(inp[1])
-				try: 
-					self.hwin.clean()
-				except AttributeError:
-					pass
-			elif type(inp[1]) == str:
-				
-				return self.returnCh(self)
-
-
-		return self.current
-
-	def returnMove(self, inp):
-		y, x = inp
-		try:
-			self.win.move(y, x)
-		except Exception as e:
-			self.returnMsg('Cant go here')
-			pass
-		return
-
-	def returnCh(self, inp):
-		if inp == 'q':
-			return 'q'
-		elif inp == 'r':
-			# win.move(0, 0)
-			self.win.erase()
-			return 
-		elif inp == 'x':
-			self.win.addstr('X')
-			return
-		elif inp == 'o':
-			self.win.addstr('O')
-			return
-
-	def returnMsg(self, msg):
-		if type(msg) == str:
-			try:
-				self.hwin.setMessage(msg)
-			except AttributeError:
-				pass
-		return
-
-# def readInput(win, c):
-
-# 		y, x = win.getyx()
-# 		if c == curses.KEY_UP:
-# 			y -= 1
-# 		if c == curses.KEY_DOWN:
-# 			y += 1 
-# 		elif c == curses.KEY_LEFT:
-# 			x -= 1 
-# 		elif c == curses.KEY_RIGHT:
-# 			x += 1
-# 		elif c == ord('X') or c == ord('x'): 
-# 			return (win, 'x')
-# 		elif c == ord('O') or c == ord('o'):
-# 			return (win, 'o')
-# 		elif c == ord('r'):
-# 			return (win, 'r')
-# 		elif c == ord('q'):
-# 			return (win, 'q')
-# 		return (win, (y, x))
 
 
 # def doAction(inp):
@@ -179,43 +112,23 @@ class Action:
 # 				win.addstr('O')
 # 				return
 
+# class HelpWin:
 
-# def displayHelp(errMsg):
+# 	def __init__(self):
+# 		self.win = None
+# 		self.msg = None
+# 	def makeMsg:
+# 		self.win = curses.newwin(3, len(self.msg) + 4, 30, 10 )
+# 		self.win.box()
+# 		self.win.addstr(1, 2, self.msg)
+# 		self.win.refresh()
+# 		return self.hwin
 
-# 	if type(errMsg) == str:
-# 		length = len(errMsg)
-# 	else:
-# 		errMsg = 'Wrong Error format!'
+# 	def setMsg(self, errMsg):
 
-# 	hwin = curses.newwin(3, length + 4, 30, 10 )
-# 	hwin.box()
-# 	hwin.addstr(1, 2, errMsg)
-# 	hwin.refresh()
-# 	return hwin
+# 		if type(errMsg) == str:
+# 			self.msg = errMsg
+# 		else:
+# 			self.msg = 'Wrong Error format!'
+# 		return self.msg
 
-def main(stdscr):
-	# stdscr.keypad(True)
-	curses.use_default_colors()
-	stdscr.clear()
-	while True:
-		c = stdscr.getch()
-		# inp = readInput(stdscr, c)
-		# ac = doAction(inp)
-
-		pwin = PlayWindow()
-		hwin = HelpWindow()
-		a = Action(hwin)
-		inp = a.readInput(pwin.cwin, c)
-		ac = a.doAction(inp)
-		
-
-		if type(ac) == str:
-			if ac == 'q':
-				break
-
-		pwin.cwin.refresh()
-		stdscr.refresh()
-
-		
-
-wrapper(main)
