@@ -14,6 +14,8 @@ class Game:
 						3 : 'X wins!!!',
 						4 : 'O wins!!!' }
 		self.board = [[0 for x in range(5)] for y in range(5)] 
+		self.nextPlayer = 'X'
+		self.reMatch = True
 
 	def drawGameWin(self):
 		self.gameWin.addstr(0, 1, '|')
@@ -116,15 +118,17 @@ class Game:
 		elif c == 67:
 			self.x += 2
 		elif c == ord('X') or c == ord('x'): 
-			if self.tryToSet('X'):
+			if self.nextPlayer == 'X' and self.tryToSet('X'):
 				try:
 					self.gameWin.addstr('X')
+					self.nextPlayer = 'O'
 				except Exception:
 					pass
 		elif c == ord('O') or c == ord('o'):
-			if self.tryToSet('O'):
+			if self.nextPlayer == 'O' and self.tryToSet('O'):
 				try:
 					self.gameWin.addstr('O')
+					self.nextPlayer = 'X'
 				except Exception:
 					pass
 		elif c == ord('r'):
@@ -141,8 +145,12 @@ class Game:
 		exit()
 
 	def reset(self):
+		self.board = [[0 for x in range(5)] for y in range(5)] 
 		self.gameWin.erase()
+		self.nextPlayer = 'X'
 		self.y, self.x = self.gameWin.getyx()
+		if self.checkWinCond():
+			self.reMatch = True
 
 
 
@@ -150,19 +158,21 @@ def main(stdscr):
 	g = Game(stdscr)
 	curses.use_default_colors()
 	stdscr.clear()
-	
-	while not g.checkWinCond():
+	while g.reMatch:
+		g.reMatch = False
+		while not g.checkWinCond():
 
-		g.drawGameWin()
+			g.drawGameWin()
+			g.readInput()
+			g.makeMove()
+			#wcond = g.checkWinCond()
+			#if wcond:
+			#	g.makeHelpWin(wcond)
+			stdscr.refresh()
+
+		g.makeHelpWin(g.checkWinCond())
 		g.readInput()
-		g.makeMove()
-		#wcond = g.checkWinCond()
-		#if wcond:
-		#	g.makeHelpWin(wcond)
-		stdscr.refresh()
-
-	g.makeHelpWin(g.checkWinCond())
-	g.readInput()
+		
 
 wrapper(main)
 

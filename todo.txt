@@ -1,0 +1,2 @@
+screen width/height checken
+auf screen resize reagieren
