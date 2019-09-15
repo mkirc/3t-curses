@@ -6,7 +6,11 @@ stdscr = curses.initscr()
 class Game:
 	def __init__(self, stdscr):
 		self.stdscr = stdscr
-		self.gameWin = curses.newwin(5, 5, 1, 1)
+		self.pwinY = 1
+		self.pwinX = 1
+		self.hwinY = 6
+		self.hwinX = 0
+		self.gameWin = curses.newwin(5, 5, self.pwinY, self.pwinX)
 		self.helpWin = None
 		self.y, self.x = self.gameWin.getyx()
 		self.errMsg = { 1 : 'Cant go here, You FOOL!',
@@ -17,6 +21,9 @@ class Game:
 		self.board = [[0 for x in range(5)] for y in range(5)] 
 		self.nextPlayer = 'X'
 		self.reMatch = True
+		self.curMsg = ''
+
+
 
 	def drawGameWin(self):
 		self.gameWin.addstr(0, 1, '|')
@@ -34,19 +41,40 @@ class Game:
 		self.gameWin.move(self.y, self.x)
 
 	def checkTermSize(self):
-		self.termY, self.termX = curses.update_lines_cols()
+		self.termY = curses.LINES
+		self.termX = curses.COLS
+		curses.update_lines_cols()
+		# self.stdscr.addstr(9,0 ,str((self.termY, self.termX)))
+		self.stdscr.refresh()
 
 	def setWinPosByTermSize(self):
-		pass
+		maxY = 5 + 3 + 1 # pwin + hwin + offset
+		maxX = 5 + len(self.curMsg) + 4 + 1 # pwin + hwin + offset
+
+		if self.termY < maxY:
+			if self.termX > maxX:
+				self.hwinY = 1
+				self.hwinX = 6
+			else:
+				pass
+		else:
+			self.hwinY = 6
+			self.hwinX = 0
+
 
 
 	def makeHelpWin(self, errCode):
 
 		msg = self.errMsg[errCode]
 		if msg:
-			self.helpWin = curses.newwin(3, len(msg) + 4, 7, 5 )
-			self.helpWin.box()
+			self.curMsg = msg
+			msgY = 1
+			for i in msg:
+				if '\n' in i:
+					msgY += 1
+			self.helpWin = curses.newwin(msgY + 2, len(msg) + 4, self.hwinY, self.hwinX)
 			self.helpWin.addstr(1, 2, msg)
+			self.helpWin.box()
 			self.helpWin.refresh()
 
 	def makeMove(self):
@@ -75,8 +103,10 @@ class Game:
 		returnVal = 0 # 3 for x wins;  4 for o wins; 5 for Draw
 		countx = 0 #check rows and columns
 		counto = 0
-		allChars = []
+		ac = [] # list all moves
 
+
+		# orthogonal win condition
 		for i in [0, 2, 4]: 
 			if self.board[i] == ['X', 0, 'X', 0, 'X']:
 				returnVal = 3
@@ -85,7 +115,8 @@ class Game:
 				returnVal = 4
 				return returnVal
 			for j in [0, 2, 4]:
-				allChars.append(self.board[i][j])
+				if self.board[i][j] != 0:
+					ac.append(self.board[i][j])
 				if self.board[j][i] == 'X':
 					countx += 1
 					if countx == 3:
@@ -100,7 +131,7 @@ class Game:
 			counto = 0
 			countx = 0
 
-
+		# diagonal win condition
 		if [self.board[i][i] for i in [0, 2, 4]] == ['X' for i in range(3)]:
 			return 3
 		elif [self.board[i][i] for i in [0, 2, 4]] == ['O' for i in range(3)]:
@@ -110,10 +141,9 @@ class Game:
 		elif [self.board[4-i][i] for i in [0, 2, 4]] == ['O' for i in range(3)]:
 			return 4
 
-		if all(allChars) in ['X', 'O']:
+		# draw condition
+		if len(ac) == 9:
 			return 5
-
-
 
 	def readInput(self):
 
@@ -151,9 +181,6 @@ class Game:
 			# # self.gameWin.addstr(str(d))
 			# self.gameWin.refresh()
 
-	def quit(self):
-		exit()
-
 	def reset(self):
 		self.board = [[0 for x in range(5)] for y in range(5)] 
 		self.gameWin.erase()
@@ -162,6 +189,9 @@ class Game:
 		if self.checkWinCond():
 			self.reMatch = True
 
+
+	def quit(self):
+		exit()
 
 
 def main(stdscr):
@@ -172,16 +202,17 @@ def main(stdscr):
 		g.reMatch = False
 		while not g.checkWinCond():
 
+			g.checkTermSize()
+			g.setWinPosByTermSize()
 			g.drawGameWin()
 			g.readInput()
 			g.makeMove()
-			#wcond = g.checkWinCond()
-			#if wcond:
-			#	g.makeHelpWin(wcond)
+			g.checkWinCond()
 			stdscr.refresh()
 
 		g.makeHelpWin(g.checkWinCond())
 		g.readInput()
+		
 		
 
 wrapper(main)
