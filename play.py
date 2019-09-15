@@ -1,5 +1,8 @@
 import curses
+import textwrap
+import time
 from curses import wrapper
+
 stdscr = curses.initscr()
 
 
@@ -10,6 +13,8 @@ class Game:
 		self.pwinX = 1
 		self.hwinY = 6
 		self.hwinX = 0
+		self.maxY = 10 # pwin + hwin + offset
+		self.maxX = 50 # pwin + hwin + offset
 		self.gameWin = curses.newwin(5, 5, self.pwinY, self.pwinX)
 		self.helpWin = None
 		self.y, self.x = self.gameWin.getyx()
@@ -22,10 +27,12 @@ class Game:
 		self.nextPlayer = 'X'
 		self.reMatch = True
 		self.curMsg = ''
+		self.wrapText = False
 
 
 
 	def drawGameWin(self):
+
 		self.gameWin.addstr(0, 1, '|')
 		self.gameWin.addstr(0, 3, '|')
 		self.gameWin.addstr(2, 1, '|')
@@ -41,41 +48,77 @@ class Game:
 		self.gameWin.move(self.y, self.x)
 
 	def checkTermSize(self):
+
+		curses.update_lines_cols()
 		self.termY = curses.LINES
 		self.termX = curses.COLS
-		curses.update_lines_cols()
 		# self.stdscr.addstr(9,0 ,str((self.termY, self.termX)))
 		self.stdscr.refresh()
 
 	def setWinPosByTermSize(self):
-		maxY = 5 + 3 + 1 # pwin + hwin + offset
-		maxX = 5 + len(self.curMsg) + 4 + 1 # pwin + hwin + offset
 
-		if self.termY < maxY:
-			if self.termX > maxX:
+		if self.termY <= self.maxY:
+			if self.termX >= self.maxX:
 				self.hwinY = 1
 				self.hwinX = 6
+				self.wrapText = False
+				
 			else:
-				pass
+				self.hwinY = 1
+				self.hwinX = 6
+				self.wrapText = True
+
 		else:
 			self.hwinY = 6
 			self.hwinX = 0
 
+	def getMsgByTermSize(self, errCode):
+
+		if not self.curMsg:
+			msg = self.errMsg[errCode]
+			self.curMsg = msg
+			return msg
+		else:
+			if self.wrapText:
+				dif = self.termX * 2 - self.maxX - 6
+				try:
+					self.curMsg = textwrap.fill(self.curMsg, dif)
+				except ValueError:
+					pass
+			return self.curMsg
 
 
 	def makeHelpWin(self, errCode):
 
-		msg = self.errMsg[errCode]
+		msg = self.getMsgByTermSize(errCode)
 		if msg:
-			self.curMsg = msg
 			msgY = 1
-			for i in msg:
-				if '\n' in i:
+			if '\n' in msg:
+				longest = ''
+				allChunks = []
+				for chunk in msg.split('\n'):
+					allChunks.append(chunk)
+					if len(longest) <= len(chunk):
+						longest = chunk
+				length = len(longest)
+				for chunk in allChunks:
 					msgY += 1
-			self.helpWin = curses.newwin(msgY + 2, len(msg) + 4, self.hwinY, self.hwinX)
-			self.helpWin.addstr(1, 2, msg)
-			self.helpWin.box()
-			self.helpWin.refresh()
+				
+				self.helpWin = curses.newwin(msgY + 2, length + 4, self.hwinY, self.hwinX)
+				for count,chunk in enumerate(allChunks):
+					self.helpWin.addstr(count + 1, 2, chunk)
+				self.helpWin.box()
+				self.helpWin.refresh()
+
+			else:
+				length = len(msg)
+
+				self.helpWin = curses.newwin(msgY + 2, length + 4, self.hwinY, self.hwinX)
+				self.helpWin.addstr(1, 2, msg)
+				self.helpWin.box()
+				self.helpWin.refresh()
+			
+
 
 	def makeMove(self):
 
@@ -85,6 +128,7 @@ class Game:
 				self.helpWin.erase()
 				self.helpWin.refresh()
 				self.helpWin = None
+				self.curMsg = None
 
 		except Exception:
 			self.makeHelpWin(1)
@@ -186,8 +230,7 @@ class Game:
 		self.gameWin.erase()
 		self.nextPlayer = 'X'
 		self.y, self.x = self.gameWin.getyx()
-		if self.checkWinCond():
-			self.reMatch = True
+
 
 
 	def quit(self):
@@ -202,6 +245,7 @@ def main(stdscr):
 		g.reMatch = False
 		while not g.checkWinCond():
 
+			
 			g.checkTermSize()
 			g.setWinPosByTermSize()
 			g.drawGameWin()
@@ -211,7 +255,13 @@ def main(stdscr):
 			stdscr.refresh()
 
 		g.makeHelpWin(g.checkWinCond())
-		g.readInput()
+		c = g.gameWin.getch()
+		if c == ord('r'):
+			g.reset()
+			g.reMatch = True
+			
+
+
 		
 		
 
