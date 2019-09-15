@@ -1,2 +1,2 @@
-screen width/height checken
-auf screen resize reagieren
+pvp, pvc implementieren
+win counter implementiern
