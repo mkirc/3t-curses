@@ -6,13 +6,14 @@ stdscr = curses.initscr()
 class Game:
 	def __init__(self, stdscr):
 		self.stdscr = stdscr
-		self.gameWin = curses.newwin(5, 5, 1, 9)
+		self.gameWin = curses.newwin(5, 5, 1, 1)
 		self.helpWin = None
 		self.y, self.x = self.gameWin.getyx()
 		self.errMsg = { 1 : 'Cant go here, You FOOL!',
 						2 : 'You cannot sit here',
 						3 : 'X wins!!!',
-						4 : 'O wins!!!' }
+						4 : 'O wins!!!' ,
+						5 : 'Draw!'}
 		self.board = [[0 for x in range(5)] for y in range(5)] 
 		self.nextPlayer = 'X'
 		self.reMatch = True
@@ -31,6 +32,13 @@ class Game:
 		# except Exception:
 		# 	pass
 		self.gameWin.move(self.y, self.x)
+
+	def checkTermSize(self):
+		self.termY, self.termX = curses.update_lines_cols()
+
+	def setWinPosByTermSize(self):
+		pass
+
 
 	def makeHelpWin(self, errCode):
 
@@ -64,12 +72,12 @@ class Game:
 			return False
 
 	def checkWinCond(self):
-		returnVal = 0 # 1 for x wins;  2 for o wins
-		countx = 0
+		returnVal = 0 # 3 for x wins;  4 for o wins; 5 for Draw
+		countx = 0 #check rows and columns
 		counto = 0
-		#check rows and columns
+		allChars = []
 
-		for i in [0,2,4]: 
+		for i in [0, 2, 4]: 
 			if self.board[i] == ['X', 0, 'X', 0, 'X']:
 				returnVal = 3
 				return returnVal 
@@ -77,6 +85,7 @@ class Game:
 				returnVal = 4
 				return returnVal
 			for j in [0, 2, 4]:
+				allChars.append(self.board[i][j])
 				if self.board[j][i] == 'X':
 					countx += 1
 					if countx == 3:
@@ -87,22 +96,22 @@ class Game:
 					if counto == 3:
 						returnVal = 4
 						return returnVal
+
 			counto = 0
 			countx = 0
 
 
-		if [self.board[i][i] for i in [0,2,4]] == ['X' for i in range(3)]:
+		if [self.board[i][i] for i in [0, 2, 4]] == ['X' for i in range(3)]:
 			return 3
-		elif [self.board[i][i] for i in [0,2,4]] == ['O' for i in range(3)]:
+		elif [self.board[i][i] for i in [0, 2, 4]] == ['O' for i in range(3)]:
 			return 4
-		elif [self.board[4-i][i] for i in [0,2,4]] == ['X' for i in range(3)]:
+		elif [self.board[4-i][i] for i in [0, 2, 4]] == ['X' for i in range(3)]:
 			return 3
-		elif [self.board[4-i][i] for i in [0,2,4]] == ['O' for i in range(3)]:
+		elif [self.board[4-i][i] for i in [0, 2, 4]] == ['O' for i in range(3)]:
 			return 4
 
-
-
-
+		if all(allChars) in ['X', 'O']:
+			return 5
 
 
 
@@ -121,16 +130,17 @@ class Game:
 			if self.nextPlayer == 'X' and self.tryToSet('X'):
 				try:
 					self.gameWin.addstr('X')
-					self.nextPlayer = 'O'
 				except Exception:
 					pass
+				self.nextPlayer = 'O'
+
 		elif c == ord('O') or c == ord('o'):
 			if self.nextPlayer == 'O' and self.tryToSet('O'):
 				try:
 					self.gameWin.addstr('O')
-					self.nextPlayer = 'X'
 				except Exception:
 					pass
+				self.nextPlayer = 'X'
 		elif c == ord('r'):
 			self.reset()
 		elif c == ord('q'):
@@ -175,53 +185,3 @@ def main(stdscr):
 		
 
 wrapper(main)
-
-
-
-
-# def doAction(inp):
-# 	if type(inp) == tuple:
-# 		win = inp[0]
-# 		yOld, xOld = win.getyx()
-# 		if type(inp[1]) == tuple:
-# 			y, x = inp[1]
-# 			try:
-# 				win.move(y, x)
-# 			except Exception as e:
-# 				hwin = displayHelp('Cant go here, You FOOL!')
-# 				win.move(yOld, xOld)
-# 				return
-# 		elif type(inp[1]) == str:
-# 			if inp[1] == 'q':
-# 				return 'q'
-# 			elif inp[1] == 'r':
-# 				# win.move(0, 0)
-# 				win.erase()
-# 				return
-# 			elif inp[1] == 'x':
-# 				win.addstr('X')
-# 				return
-# 			elif inp[1] == 'o':
-# 				win.addstr('O')
-# 				return
-
-# class HelpWin:
-
-# 	def __init__(self):
-# 		self.win = None
-# 		self.msg = None
-# 	def makeMsg:
-# 		self.win = curses.newwin(3, len(self.msg) + 4, 30, 10 )
-# 		self.win.box()
-# 		self.win.addstr(1, 2, self.msg)
-# 		self.win.refresh()
-# 		return self.hwin
-
-# 	def setMsg(self, errMsg):
-
-# 		if type(errMsg) == str:
-# 			self.msg = errMsg
-# 		else:
-# 			self.msg = 'Wrong Error format!'
-# 		return self.msg
-
