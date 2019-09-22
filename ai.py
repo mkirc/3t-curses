@@ -4,13 +4,13 @@ from copy import deepcopy
 class MiniMax:
 
 	def __init__(self, board, aiPlayer):
-		# self.initBoard = board
-		# self.player = aiPlayer
-		# self.emptyFields = self.getEmptyFields()
-		# self.termState = self.isTermState()
+
 		self.moves = {}
 		self.bf = BoardFactory()
 		self.initBoard = self.bf.returnBoard(board,	aiPlayer)
+		self.initBoard.minimax()
+		self.moves = self.initBoard.moves
+
 
 	def getEmptyFields(self):
 
@@ -28,40 +28,13 @@ class MiniMax:
 		elif self.player == 'O':
 			self.player = 'X'
 
-	def minimax(self):
-
-		if not self.initBoard.termState:
-			for f in self.initBoard.emptyFields:
-				# print(self.initBoard)
-				newBoard = self.bf.returnBoard(deepcopy(self.initBoard.board), self.initBoard.player)
-				newBoard.board[f[0]][f[1]] = self.initBoard.player
-
-				if newBoard.isTermState():
-					newBoard.score = newBoard.isTermState()
-					self.moves[f] = newBoard.score
-				else:
-					newBoard.player = self.initBoard.player
-					newBoard.playerSwitch()
-					newBoard.minimax()
-					self.moves[f] = newBoard.moves
-		else:
-			if self.termState == 1:
-				print('x wins')
-			elif self.termState == -1:
-				print('o wins')
-			elif self.termState == 0:
-				print('draw')
-
 	def isTermState(self):
-
 		if self.winCondition(self.initBoard, 'X'):
 			return 1
 		elif self.winCondition(self.initBoard, 'O'):
 			return -1
 		elif len(self.emptyFields) == 0:
-			return 0
-		else:
-			return None
+			print('wtf')
 
 	def winCondition(self, board, player):
 
@@ -81,6 +54,7 @@ class MiniMax:
 
 			counto = 0
 			countx = 0
+
 		# diagonal win condition
 		if [board[i][i] for i in [0, 2, 4]] == [player for i in range(3)]:
 			return True
@@ -91,15 +65,14 @@ class MiniMax:
 
 
 class Board:
+
 	def __init__(self, board, player):
+
 		self.board = board
-		self.emptyFields = self.getEmptyFields()
-		self.termState = self.isTermState()
 		self.score = None
 		self.player = player
 		self.moves = {}
 		self.bf = BoardFactory()
-		# print(self.emptyFields)
 
 	def playerSwitch(self):
 
@@ -110,29 +83,20 @@ class Board:
 
 	def minimax(self):
 
-		if not self.termState:
-			for f in self.emptyFields:
+		if not len(self.getEmptyFields()) == 0:
+			for f in self.getEmptyFields():
 				newBoard = self.bf.returnBoard(deepcopy(self.board), self.player)
 				newBoard.board[f[0]][f[1]] = self.player
-
 
 				if newBoard.isTermState():
 					newBoard.score = newBoard.isTermState()
 					self.score = newBoard.score
 					self.moves[f] = self.score
 				else:
-					newBoard.player = self.player
 					newBoard.playerSwitch()
 					newBoard.minimax()
 					self.moves[f] = newBoard.moves
 				newBoard = None
-		else:
-			if self.termState == 1:
-				print('x wins')
-			elif self.termState == -1:
-				print('o wins')
-			elif self.termState == 0:
-				print('draw')
 
 	def getEmptyFields(self):
 
@@ -149,10 +113,9 @@ class Board:
 			return 1
 		elif self.winCondition(self.board,'O'):
 			return -1
-		elif len(self.emptyFields) == 0:
+		elif len(self.getEmptyFields()) == 0:
 			return 0
-		else:
-			return None
+
 
 
 	def winCondition(self, board, player):
@@ -191,14 +154,36 @@ class BoardFactory:
 def main():
 	'''
 	xox
-	 o
-	  
+	xox
+	  o
 	'''
 
-	b = [['X', 0, 'X', 0, 0], [0, 0, 0, 0, 0], ['O', 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+	# b = [
+	# 	['X', 0, 'X', 0, 0], 
+	# 	[0, 0, 0, 0, 0], 
+	# 	['O', 0, 'O', 0, 0], 
+	# 	[0, 0, 0, 0, 0], 
+	# 	['X', 0, 'X', 0, 'O']
+	# 	]
+
+	b = [
+		['X', 0, 0, 0, 0], 
+		[0, 0, 0, 0, 0], 
+		['O', 0, 0, 0, 0], 
+		[0, 0, 0, 0, 0], 
+		['X', 0, 0, 0, 0]
+		]
+
+	# b = [
+	# 	['X', 0, 'X', 0, 'O'], 
+	# 	[0, 0, 0, 0, 0], 
+	# 	['O', 0, 'O', 0, 'X'], 
+	# 	[0, 0, 0, 0, 0], 
+	# 	['X', 0, 'X', 0, 'O']
+	# 	]
 
 	m = MiniMax(b, 'O')
-	m.minimax()
+	# m.minimax()
 	pprint(m.moves)
 
 
