@@ -37,25 +37,43 @@ class MiniMax:
 					lvl += 1
 					self.findEndMove(v[1], lvl)
 
-	def findBestMove(self, moves, tmp=None):
-		
+	def findSubMoves(self, moves, c=0, tlist=[]):
 
 		for m in moves:
-			if tmp:
-				tmp = tmp
-			else:
-				tmp = []
+			lvl = c
 			for k, v in m.items():
 				if type(v[1]) == int:
-					# print('hm')
-					tmp.append((v[0], k, v[1]))
-					self.subMoves.append(tmp)
-					tmp = []
-
+					if lvl:
+						tlist.append((v[0], k, v[1]))
+						if not tlist in self.subMoves:
+							self.subMoves.append(tlist)
+					else:
+						tlist = []
+						self.subMoves.append([(v[0], k, v[1])])
+				
 				if type(v[1]) == list:
-					tmp.append((v[0], k))
-					self.findBestMove(v[1])
-					
+					if lvl:
+						tlist.append((v[0], k))
+					else:
+						tlist = []
+						tlist.append((v[0], k))					
+					lvl += 1
+					self.findSubMoves(v[1], lvl, tlist)
+
+
+	def findBestMove(self):
+
+		allScores = []
+		for m in self.subMoves:
+			curScore = 0
+			for t in m:
+				if len(t) >= 3:
+					if type(t[2]) == int:
+						curScore += t[2]
+			allScores.append((m[0], curScore))
+		for s in allScores:
+			print(s)
+
 		
 
 class Board:
@@ -160,11 +178,11 @@ def main():
 	'''
 
 	b = [
-		['X', 0, 0, 0, 0], 
+		['X', 0, 'X', 0, 0], 
 		[0, 0, 0, 0, 0], 
 		['O', 0, 'O', 0, 0], 
 		[0, 0, 0, 0, 0], 
-		['X', 0, 'X', 0, 0]
+		['X', 0, 'X', 0, 'O']
 		]
 
 	# b = [
@@ -188,9 +206,12 @@ def main():
 	# for i in m.moves:
 	# 	for k,v in i.items():
 	# 		print(k)
-	m.findBestMove(m.moves)
-	for i in m.subMoves:
-		print(i)
+	m.findSubMoves(m.moves)
+	print('# PossibleMoves: ' + str(len(m.subMoves)))
+	m.findBestMove()
+	print(m.subMoves[-1])
+
+	# m.findEndMove(m.moves)
 
 	# pprint(m.moves)
 
