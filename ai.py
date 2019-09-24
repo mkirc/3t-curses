@@ -12,15 +12,15 @@ class MiniMax:
 		self.initBoard = self.bf.returnBoard(board,	aiPlayer)
 		self.initBoard.minimax()
 		self.moves = self.initBoard.moves
+		self.bestMove = None
+		self.subMoves = []
 
 
 	def findEndMove(self, moves, c=0):
+
 		
 		for m in moves:
-			self.aiScore = -10000
-			self.huScore = 10000
 			lvl = c
-			movesList = []
 			for k, v in m.items():
 				if type(v[1]) == int:
 					if lvl:
@@ -37,12 +37,34 @@ class MiniMax:
 					lvl += 1
 					self.findEndMove(v[1], lvl)
 
+	def findBestMove(self, moves, tmp=None):
+		
+
+		for m in moves:
+			if tmp:
+				tmp = tmp
+			else:
+				tmp = []
+			for k, v in m.items():
+				if type(v[1]) == int:
+					# print('hm')
+					tmp.append((v[0], k, v[1]))
+					self.subMoves.append(tmp)
+					tmp = []
+
+				if type(v[1]) == list:
+					tmp.append((v[0], k))
+					self.findBestMove(v[1])
+					
+		
+
 class Board:
 
 	def __init__(self, board, player):
 
 		self.board = board
-		self.score = None
+		self.parent = None
+		self.score = 0
 		self.player = player
 		self.moves = []
 		self.bf = BoardFactory()
@@ -60,13 +82,14 @@ class Board:
 			for f in self.getEmptyFields():
 				newBoard = self.bf.returnBoard(deepcopy(self.board), self.player)
 				newBoard.board[f[0]][f[1]] = self.player
+				newBoard.parent = self
 
 				if newBoard.isTermState():
 					move = {}
 					newBoard.score = newBoard.isTermState()
-					
 					move[f] = self.player, newBoard.score
 					self.moves.append(move)
+
 				else:
 					move = {}
 					newBoard.playerSwitch()
@@ -165,7 +188,9 @@ def main():
 	# for i in m.moves:
 	# 	for k,v in i.items():
 	# 		print(k)
-	m.findEndMove(m.moves)
+	m.findBestMove(m.moves)
+	for i in m.subMoves:
+		print(i)
 
 	# pprint(m.moves)
 
