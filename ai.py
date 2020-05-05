@@ -66,13 +66,16 @@ class MiniMax:
 		allScores = []
 		for m in self.subMoves:
 			curScore = 0
-			for t in m:
+			pos = 1
+			for c,t in enumerate(m):				
 				if len(t) >= 3:
 					if type(t[2]) == int:
 						curScore += t[2]
-			allScores.append((m[0], curScore))
+						pos += c
+						# print(pos)
+			allScores.append((m[0], curScore, pos))
 		for s in allScores:
-			print(s)
+			print(str(s[1]/s[2]))
 
 		
 
@@ -178,11 +181,11 @@ def main():
 	'''
 
 	b = [
-		['X', 0, 'X', 0, 0], 
+		['X', 0, 0, 0, 0], 
 		[0, 0, 0, 0, 0], 
 		['O', 0, 'O', 0, 0], 
 		[0, 0, 0, 0, 0], 
-		['X', 0, 'X', 0, 'O']
+		['X', 0, 'X', 0, 0]
 		]
 
 	# b = [
@@ -209,7 +212,7 @@ def main():
 	m.findSubMoves(m.moves)
 	print('# PossibleMoves: ' + str(len(m.subMoves)))
 	m.findBestMove()
-	print(m.subMoves[-1])
+	# print(m.subMoves[-1])
 
 	# m.findEndMove(m.moves)
 
